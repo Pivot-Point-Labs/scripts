@@ -24,13 +24,16 @@ function Teleport:initialize()
     self.spawnRange = 3.1
     self.teleportWindowOpen = false
     self.teleportBlocked = false
+    self.teleports = nil
 
     if ac.getServerIP() == nil then
         if io.fileExists(ac.getFolder(ac.FolderID.CurrentTrack) .. "/extension/teleports.json") then
+            
             local teleport = io.load(ac.getFolder(ac.FolderID.CurrentTrack) .. "/extension/teleports.json") or nil
             if teleport then self.teleports = JSON.parse(teleport) else 
                 ac.setMessage("Teleports", "Could not load local teleports file")
             end
+
         else
             self:DownloadConfig()
         end
@@ -64,7 +67,7 @@ function Teleport:GetBlockedSpawns(spawns)
     local blocked = 0
     for spawn_index, spawn in ipairs(spawns) do
         for car_index, car in ac.iterateCars.ordered() do
-            if car.position:closerToThan(vec3.new(spawn["location"]), self.spawnRange) then
+            if car.position:closerToThan(vec3.new(spawn["position"]), self.spawnRange) then
                 blocked = blocked + 1
             end
         end
@@ -77,7 +80,7 @@ function Teleport:GetUnblockedSpawns(spawns)
     for spawn_index, spawn in ipairs(spawns) do
         local isBlocked = false
         for car_index, car in ac.iterateCars.ordered() do
-            if car.position:closerToThan(vec3.new(spawn["location"]), self.spawnRange) then
+            if car.position:closerToThan(vec3.new(spawn["position"]), self.spawnRange) then
                 isBlocked = true
             end
         end
@@ -100,11 +103,10 @@ function Teleport:TeleportToLocation(location)
     local unblocked = self:GetUnblockedSpawns(positions)
     local random = self:GetRandomSpawn(unblocked)
 
-    physics.setCarPosition(0, vec3.new(random["location"]), vec3.new(random["heading"]))
+    physics.setCarPosition(0, vec3.new(random["position"]), vec3.new(random["heading"]))
 end
 
 function Teleport:update(dt)
-    if ac.storage.teleports == nil then return end
     if self.teleports == nil then return end
 
     local selfInsideTrigger = false
@@ -131,16 +133,19 @@ end
 function Teleport:DrawTeleportWindow()
     self.teleportWindowOpen = true
     ui.modalDialog("Teleport Menu", function()
+
         local teleported = false
         ui.childWindow("tp_menu_sub", vec2(1050, 440), true, ui.WindowFlags.ThinScrollbar, function ()
 
             local count = 1
             for index, location in pairs(self.teleports["locations"]) do
+
                 if ui.iconButton(location["img"], vec2(256, 144), 5, false, ui.ButtonFlags.None) then
                     self:TeleportToLocation({index, location})
                     teleported = true
                     break
                 end
+
                 if ui.itemHovered() then
                     ui.tooltip(vec2(20, 8), function()
                         ui.setNextTextBold()
@@ -152,6 +157,7 @@ function Teleport:DrawTeleportWindow()
                 if count % 4 ~= 0 and count ~= table.nkeys(self.teleports["locations"]) then
                     ui.sameLine()
                 end
+
                 count = count+1
             end
         end)
@@ -177,7 +183,6 @@ end
 
 function Teleport:drawDebug()
     if ac.configValues({debug = false}).debug == false then return end
-    if ac.storage.teleports == nil then return end
     if self.teleports == nil then return end
 
     ac.debug("Car position", ac.getCar(0).position)
@@ -189,11 +194,9 @@ function Teleport:drawDebug()
     end
     
     for iL, location in pairs(self.teleports["locations"]) do
-        
         for iS, spawn in ipairs(location["spawns"]) do
-            render.debugBox(vec3.new(spawn["location"]), vec3.new(self.spawnRange), rgbm.colors.blue)
-            --render.debugBox(vec3.new(spawn["location"]), vec3.new(self.spawnRange), rgbm.colors.green)
-            render.debugText(vec3.new(spawn["location"]), iL, rgbm.colors.black, 1.0)
+            render.debugBox(vec3.new(spawn["position"]), vec3.new(self.spawnRange), rgbm.colors.blue)
+            render.debugText(vec3.new(spawn["position"]), iL, rgbm.colors.black, 1.0)
         end
     end
 end
