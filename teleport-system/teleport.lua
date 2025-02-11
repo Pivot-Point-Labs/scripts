@@ -15,7 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ]]--
 
 
-ac.storageSetPath("slx_teleportconfig", ac.getTrackID())
+ac.storageSetPath("slx_teleportconfig")
 
 local Teleport = class("Teleport")
 
@@ -44,17 +44,19 @@ end
 
 function Teleport:LoadLocalConfig()
     if self.teleports then return end
-    if not ac.storage.teleports then
+    if not ac.storage[ac.getTrackID()] then
         ac.setMessage("Teleports", "Local config does not exist. Please make sure you are connected to the internet and try again.")
+    else
+        self.teleports = JSON.parse(ac.storage[ac.getTrackID()])
     end
-    self.teleports = JSON.parse(ac.storage.teleports)
+    
 end
 
 function Teleport:DownloadConfig()
     local onlineConfigUrl = "https://raw.githubusercontent.com/Pivot-Point-Labs/script-configs/refs/heads/main/online/tracks/"..ac.getTrackID().."/teleports.json"
     web.get(onlineConfigUrl, {}, function (err, response)
         if err ~= nil or response.status ~= 200 then self:LoadLocalConfig(); return end
-        ac.storage.teleports = response.body
+        ac.storage[ac.getTrackID()] = response.body
         self.teleports = JSON.parse(response.body)
     end)
 end
@@ -108,7 +110,6 @@ end
 
 function Teleport:update(dt)
     if self.teleports == nil then return end
-
     local selfInsideTrigger = false
 
     for index, tp_trigger_pos in ipairs(self.teleports["triggers"]) do
@@ -200,7 +201,6 @@ function Teleport:drawDebug()
         end
     end
 end
-
 
 local tpInstance = Teleport()
 
