@@ -15,6 +15,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 ]]--
 
 local config = ac.configValues({ url = "" })
+local codeFunctions = nil
 
 if config.url == "" then return false end
 
@@ -26,9 +27,21 @@ web.get(config.url, {}, function (err, response)
      end
 
     try(function ()
-        loadstring(response.body)()
+        local code = assert(loadstring(response.body))
+        codeFunctions = code()
     end, function (err)
         ac.debug("Script execution error:", err)
     end)
 end)
 
+function script.update(dt)
+    if codeFunctions and codeFunctions[1] then
+        codeFunctions[1](dt)
+    end
+end
+
+function script.draw3D()
+    if codeFunctions and codeFunctions[2] then
+        codeFunctions[2]()
+    end
+end
