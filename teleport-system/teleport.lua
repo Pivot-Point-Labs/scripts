@@ -138,10 +138,14 @@ function Teleport:DrawTeleportWindow()
         local teleported = false
         ui.childWindow("tp_menu_sub", vec2(1050, 440), true, ui.WindowFlags.ThinScrollbar, function ()
 
+
             local count = 1
             for index, location in pairs(self.teleports["locations"]) do
 
-                if ui.iconButton(location["img"], vec2(256, 144), 5, false, ui.ButtonFlags.None) then
+                local imageId = string.replace(tostring(index)," ", "") .. tostring(count)
+                local imageurl = location["img"] .. "##"..imageId
+
+                if ui.iconButton(imageurl, vec2(256, 144), 5, false, ui.ButtonFlags.None) then
                     self:TeleportToLocation({index, location})
                     teleported = true
                     break
