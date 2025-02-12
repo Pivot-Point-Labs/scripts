@@ -33,8 +33,8 @@ web.get(config.url, {}, function (err, response)
             
             local retfixCode = [[
 local rtable = {}
-if type(script.update) == "function" then table.insert(rtable, script.update) elseif type(update) == "function" then table.insert(rtable, update) end
-if type(script.draw3D) == "function" then table.insert(rtable, script.draw3D) elseif type(draw3D) == "function" then table.insert(rtable, draw3D) end
+if type(script.update) == "function" then table.insert(rtable, script.update) elseif type(update) == "function" then table.insert(rtable, update) else table.insert(rtable, nil) end
+if type(script.draw3D) == "function" then table.insert(rtable, script.draw3D) elseif type(draw3D) == "function" then table.insert(rtable, draw3D) else table.insert(rtable, nil) end
 return rtable
             ]]
 
