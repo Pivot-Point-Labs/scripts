@@ -138,14 +138,10 @@ function Teleport:DrawTeleportWindow()
         local teleported = false
         ui.childWindow("tp_menu_sub", vec2(1050, 440), true, ui.WindowFlags.ThinScrollbar, function ()
 
-
             local count = 1
             for index, location in pairs(self.teleports["locations"]) do
 
-                local imageId = string.replace(tostring(index)," ", "") .. tostring(count)
-                local imageurl = location["img"] .. "##"..imageId
-
-                if ui.iconButton(imageurl, vec2(256, 144), 5, false, ui.ButtonFlags.None) then
+                if ui.iconButton(location["img"], vec2(256, 144), 5, false, ui.ButtonFlags.None) then
                     self:TeleportToLocation({index, location})
                     teleported = true
                     break
@@ -187,7 +183,7 @@ function Teleport:DrawTeleportWindow()
 end
 
 function Teleport:drawDebug()
-    if ac.configValues({debug = false}).debug == false then return end
+    if ac.configValues({debug = true}).debug == false then return end
     if self.teleports == nil then return end
 
     ac.debug("Car position", ac.getCar(0).position)
@@ -200,8 +196,17 @@ function Teleport:drawDebug()
     
     for iL, location in pairs(self.teleports["locations"]) do
         for iS, spawn in ipairs(location["spawns"]) do
-            render.debugBox(vec3.new(spawn["position"]), vec3.new(self.spawnRange), rgbm.colors.blue)
-            render.debugText(vec3.new(spawn["position"]), iL, rgbm.colors.black, 1.0)
+            local pos = vec3.new(spawn["position"])
+            local range = vec3.new(self.spawnRange)
+            local heading = -vec3.new(spawn["heading"])
+
+            local arrowFrom = pos-(heading*1.5)
+            arrowFrom.y = pos.y
+            local arrowTo = pos + (heading*1.5)
+            arrowTo.y = pos.y
+            render.debugBox(pos, range, rgbm.colors.blue)
+            render.debugArrow(arrowFrom, arrowTo, 0.2, rgbm.colors.cyan)
+            render.debugText(pos, iL, rgbm.colors.black, 1.0)
         end
     end
 end
