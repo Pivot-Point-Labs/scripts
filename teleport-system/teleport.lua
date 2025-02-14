@@ -200,6 +200,7 @@ function Teleport:DrawTeleportWindow()
         return CancelClicked or teleported
     end, true, function()
         self.teleportWindowOpen = false
+        self.searchText = ""
     end)
 end
 
