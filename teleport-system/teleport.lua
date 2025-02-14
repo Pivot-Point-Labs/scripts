@@ -26,6 +26,7 @@ function Teleport:initialize()
     self.teleportWindowOpen = false
     self.teleportBlocked = false
     self.teleports = nil
+    self.searchText = ""
 
     if ac.getServerIP() == nil then
         if io.fileExists(ac.getFolder(ac.FolderID.CurrentTrack) .. "/extension/teleports.json") then
@@ -132,21 +133,39 @@ function Teleport:update(dt)
 
 end
 
+function UI_GetSortedKeysFromSearch(locations, searchText)
+    local keys = table.map(locations, function(_, key) return key end)
+    if #searchText ~= 0 then
+        keys = table.filter(keys, function(key)
+            return string.find(string.lower(key), string.lower(searchText), 1, true) ~= nil
+        end)
+    end
+    table.sort(keys)
+    return keys
+end
+
+function UI_GetProcessedImageURL(locationName, url)
+    local imageId = string.replace(tostring(locationName)," ", "")
+    return url .. "###" .. imageId
+end
+
 function Teleport:DrawTeleportWindow()
     self.teleportWindowOpen = true
     ui.modalDialog("Teleport Menu", function()
-
         local teleported = false
+
+        self.searchText = ui.inputText("Search", self.searchText, bit.bor(ui.InputTextFlags.Placeholder,ui.InputTextFlags.ClearButton) )
+        
+
         ui.childWindow("tp_menu_sub", vec2(1050, 440), true, ui.WindowFlags.ThinScrollbar, function ()
 
             local count = 1
-            for index, location in pairs(self.teleports["locations"]) do
-
-                local imageId = string.replace(tostring(index)," ", "") .. tostring(count)
-                local imageurl = location["img"] .. "##"..imageId
-
-                if ui.iconButton(imageurl, vec2(256, 144), 5, false, ui.ButtonFlags.None) then
-                    self:TeleportToLocation({index, location})
+            local locationNames = UI_GetSortedKeysFromSearch(self.teleports["locations"], self.searchText)
+            for _, key in ipairs(locationNames) do
+                local location = self.teleports["locations"][key]
+ 
+                if ui.iconButton( UI_GetProcessedImageURL(key, location["img"] ), vec2(256, 144), 5, false, ui.ButtonFlags.None) then
+                    self:TeleportToLocation({key, location})
                     teleported = true
                     break
                 end
@@ -154,14 +173,12 @@ function Teleport:DrawTeleportWindow()
                 if ui.itemHovered() then
                     ui.tooltip(vec2(20, 8), function()
                         ui.setNextTextBold()
-                        ui.text(index)
+                        ui.text(key)
                         ui.text("Spawns occupied: " .. self:GetBlockedSpawns(location["spawns"]) .. "/" .. tostring(#location["spawns"]))
                     end)
                 end
 
-                if count % 4 ~= 0 and count ~= table.nkeys(self.teleports["locations"]) then
-                    ui.sameLine()
-                end
+                if count % 4 ~= 0 and count ~= table.nkeys(self.teleports["locations"]) then ui.sameLine() end
 
                 count = count+1
             end
