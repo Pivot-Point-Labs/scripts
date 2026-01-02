@@ -45,23 +45,22 @@ else
     e:start()
 end
 
-if config.use3D == false then
-    function script.update(dt)
-        local distance = ac.getCameraPosition():distance(position) -- distance between camera and audio source
-        if distance >= config.maxDistance then -- if distance is creater than configured max, stop audio
-            e:stop()
-        else
-            if use2DAudioFade == true then -- 2D audio has no fade by default
-                local distancePercentage = distance / config.maxDistance
-                local distancePercentageInvert = 1 - distancePercentage
-                local volumeFromDistance = distancePercentageInvert * volume
-                e.volume = volumeFromDistance
-            end
 
-            if distance < config.maxDistance then -- if distance is smaller than configured max, start audio.
-                if e:isPaused() then -- dont resume anything already playing
-                    e:resume()
-                end
+function script.update(dt)
+    local distance = ac.getCameraPosition():distance(position)     -- distance between camera and audio source
+    if distance >= config.maxDistance then                         -- if distance is creater than configured max, stop audio
+        e:stop()
+    else
+        if use2DAudioFade == true then     -- 2D audio has no fade by default
+            local distancePercentage = distance / config.maxDistance
+            local distancePercentageInvert = 1 - distancePercentage
+            local volumeFromDistance = distancePercentageInvert * volume
+            e.volume = volumeFromDistance
+        end
+
+        if distance < config.maxDistance then     -- if distance is smaller than configured max, start audio.
+            if e:isPaused() then                  -- dont resume anything already playing
+                e:resume()
             end
         end
     end
